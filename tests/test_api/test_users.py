@@ -25,25 +25,25 @@ class DiscourseUserTestCase(unittest.TestCase):
         )
 
     def testDeleteUser(self):
-        response = discourse_client.users.createUser(
+        response = discourse_client.users.create(
             name='Peyton Manning',
             email='peyton@example.com',
             password='omaha, omaha',
             username='peyton18'
         ).get_result()
 
-        user = discourse_client.users.getUserByEmail(
+        user = discourse_client.users.getByEmail(
             user_email='peyton@example.com'
         ).get_result()
 
-        response = discourse_client.users.deleteUser('peyton@example.com').get_result()
+        response = discourse_client.users.delete('peyton@example.com').get_result()
 
         self.assertTrue(response['deleted'])
 
     def testCreateUser(self):
-        discourse_client.users.deleteUser('peyton@example.com').get_result()
+        discourse_client.users.delete('peyton@example.com').get_result()
 
-        response = discourse_client.users.createUser(
+        response = discourse_client.users.create(
             name='Peyton Manning',
             email='peyton@example.com',
             password='omaha, omaha',
@@ -53,14 +53,14 @@ class DiscourseUserTestCase(unittest.TestCase):
         self.assertTrue(response['success'])
 
     def testFindUserByEmail(self):
-        response = discourse_client.users.createUser(
+        response = discourse_client.users.create(
             name='Peyton Manning',
             email='peyton@example.com',
             password='omaha, omaha',
             username='peyton18'
         ).get_result()
 
-        response = discourse_client.users.getUserByEmail(
+        response = discourse_client.users.getByEmail(
             user_email='peyton@example.com'
         ).get_result()
 

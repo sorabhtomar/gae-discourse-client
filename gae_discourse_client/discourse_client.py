@@ -66,10 +66,10 @@ class DiscourseAPIClient(object):
                 'api_username': self._api_username
             })
 
+        url = self._discourse_url + req_string
+
         if params:
-            url = '%s%s?%s' % (self._discourse_url, req_string, urlencode(params))
-        else:
-            url = '%s%s' % (self._discourse_url, req_string)
+            url += '?' + urlencode(params)
 
         response = yield ndb.get_context().urlfetch(
             url=url, payload=urlencode(payload), method=method,
@@ -96,5 +96,5 @@ def initClient(discourse_url, api_key, api_username):
     global users, groups, categories
 
     users = users_module.UserClient(_api_client)
-    groups = groups_module.GroupClient(_api_client)
+    groups = groups_module.GroupClient(_api_client, users)
     categories = categories_module.CategoryClient(_api_client)

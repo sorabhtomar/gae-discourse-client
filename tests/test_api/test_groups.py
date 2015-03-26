@@ -25,35 +25,35 @@ class DiscourseGroupTestCase(unittest.TestCase):
         )
 
     def testDeleteGroup(self):
-        discourse_client.groups.createGroup(
+        discourse_client.groups.create(
             group_name='quarterbacks'
         ).get_result()
 
-        response = discourse_client.groups.deleteGroup('quarterbacks').get_result()
+        response = discourse_client.groups.delete('quarterbacks').get_result()
         self.assertEqual('OK', response['success'])
 
     def testCreateGroup(self):
-        discourse_client.groups.deleteGroup('quarterbacks').get_result()
+        discourse_client.groups.delete('quarterbacks').get_result()
 
-        response = discourse_client.groups.createGroup(
+        response = discourse_client.groups.create(
             group_name='quarterbacks'
         ).get_result()
 
         self.assertTrue(response['basic_group'] is not None)
 
     def testAddUserToGroup(self):
-        discourse_client.groups.createGroup(
+        discourse_client.groups.create(
             group_name='quarterbacks'
         ).get_result()
 
-        discourse_client.users.createUser(
+        discourse_client.users.create(
             name='Peyton Manning',
             email='peyton@example.com',
             password='omaha, omaha',
             username='peyton18'
         ).get_result()
 
-        response = discourse_client.groups.addUserToGroup(
+        response = discourse_client.groups.addUser(
             user_email='peyton@example.com',
             group_name='quarterbacks'
         ).get_result()
@@ -61,23 +61,23 @@ class DiscourseGroupTestCase(unittest.TestCase):
         self.assertEqual('OK', response['success'])
 
     def testRemoveUserFromGroup(self):
-        discourse_client.groups.createGroup(
+        discourse_client.groups.create(
             group_name='quarterbacks'
         ).get_result()
 
-        discourse_client.users.createUser(
+        discourse_client.users.create(
             name='Peyton Manning',
             email='peyton@example.com',
             password='omaha, omaha',
             username='peyton18'
         ).get_result()
 
-        discourse_client.groups.addUserToGroup(
+        discourse_client.groups.addUser(
             user_email='peyton@example.com',
             group_name='quarterbacks'
         ).get_result()
 
-        response = discourse_client.groups.removeUserFromGroup(
+        response = discourse_client.groups.removeUser(
             user_email='peyton@example.com',
             group_name='quarterbacks'
         ).get_result()

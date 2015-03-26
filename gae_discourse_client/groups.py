@@ -13,46 +13,22 @@ class Error(Exception):
 
 
 class GroupClient(object):
-    """An API client for interacting with Discourse"""
+    """An API client for interacting with Discourse for group-related actions"""
 
-    def __init__(self, api_client):
+    def __init__(self, api_client, user_client):
         self._api_client = api_client
+        self._user_client = user_client
 
     @ndb.tasklet
-    def getUserByEmail(self, user_email):
-        """Finds a user with the given email
-
-        This method takes a user email and returns a future which resolves to
-        the Discourse user with that email address, if they exist. If no user
-        is found, None is returned.
-        """
-        users = yield self._api_client.getRequest(
-            'admin/users/list/active.json',
-            params={'filter': user_email, 'show_emails': 'true'}
-        )
-
-        for user in users:
-            if user['email'].lower() == user_email.lower():
-                raise ndb.Return(user)
-
-        raise ndb.Return(None)
-
-    @ndb.tasklet
-    def addUserToGroup(self, user_email, group_name):
+    def addUser(self, user_email, group_name):
         """Adds the given account to the Discourse group with the given name"""
 
-        user = yield self.getUserByEmail(user_email)
+        user = yield self._user_client.getByEmail(user_email)
         if not user:
             raise Error("Unable to find user with email %s" % user_email)
 
-        groups = yield self._api_client.getRequest('admin/groups.json')
-
-        group_id = None
-        for group in groups:
-            if group['name'] == group_name:
-                group_id = group['id']
-                break
-        else:
+        group = yield self.getByName(group_name)
+        if not group:
             raise Error("Group named %s not found" % group_name)
 
         payload = {
@@ -60,19 +36,19 @@ class GroupClient(object):
         }
 
         result = yield self._api_client.putRequest(
-            'admin/groups/%s/members.json' % group_id, payload=payload
+            'admin/groups/%s/members.json' % group['id'], payload=payload
         )
         raise ndb.Return(result)
 
     @ndb.tasklet
-    def removeUserFromGroup(self, user_email, group_name):
+    def removeUser(self, user_email, group_name):
         """Removes an account from a group"""
 
-        user = yield self.getUserByEmail(user_email)
+        user = yield self._user_client.getByEmail(user_email)
         if not user:
             raise Error("Unable to find user with email %s" % user_email)
 
-        group = yield self.getGroupByName(group_name)
+        group = yield self.getByName(group_name)
         if not group:
             raise Error("Group named %s not found" % group_name)
 
@@ -83,15 +59,15 @@ class GroupClient(object):
         raise ndb.Return(result)
 
     @ndb.tasklet
-    def createGroup(self, group_name, **kwargs):
+    def create(self, group_name, strict=False, **kwargs):
         """Creates a group with the given name on Discourse"""
 
-        groups = yield self._api_client.getRequest('admin/groups.json')
-
-        for group in groups:
-            if group['name'] == group_name:
+        group = yield self.getByName(group_name)
+        if group:
+            if not strict:
                 raise ndb.Return(None)
-                # raise Error("Group named %s already exists!" % group_name)
+            else:
+                raise Error("Group named %s already exists!" % group_name)
 
         payload = {
             'name': group_name
@@ -104,16 +80,19 @@ class GroupClient(object):
         raise ndb.Return(response)
 
     @ndb.tasklet
-    def deleteGroup(self, group_name):
-        group = yield self.getGroupByName(group_name)
+    def delete(self, group_name, strict=False):
+        group = yield self.getByName(group_name)
         if not group:
-            raise ndb.Return(None)
+            if not strict:
+                raise ndb.Return(None)
+            else:
+                raise Error("Could not find group with name %s" % group_name)
 
         response = yield self._api_client.deleteRequest('admin/groups/%s' % group['id'])
         raise ndb.Return(response)
 
     @ndb.tasklet
-    def getGroupByName(self, group_name):
+    def getByName(self, group_name):
         groups = yield self._api_client.getRequest('admin/groups.json')
 
         for group in groups:

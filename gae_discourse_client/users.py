@@ -13,7 +13,7 @@ class Error(Exception):
 
 
 class UserClient(object):
-    """An API client for interacting with Discourse"""
+    """An API client for interacting with Discourse for user-related actions"""
 
     def __init__(self, api_client):
         self._api_client = api_client
@@ -21,13 +21,8 @@ class UserClient(object):
     # USER ACTIONS
 
     @ndb.tasklet
-    def getUserByEmail(self, user_email):
-        """Finds a user with the given email
-
-        This method takes a user email and returns a future which resolves to
-        the Discourse user with that email address, if they exist. If no user
-        is found, None is returned.
-        """
+    def getByEmail(self, user_email):
+        """Finds the Discourse user with the given email"""
         users = yield self._api_client.getRequest(
             'admin/users/list/active.json',
             params={'filter': user_email, 'show_emails': 'true'}
@@ -40,10 +35,10 @@ class UserClient(object):
         raise ndb.Return(None)
 
     @ndb.tasklet
-    def createUser(self, name, email, password, username, external_id=None):
+    def create(self, name, email, password, username, external_id=None):
         """Create a Discourse account
 
-        This method takes a user object and returns the Discourse API response
+        This method takes user account info and returns the Discourse API response
         containing the user information for that user.
         """
 
@@ -62,29 +57,13 @@ class UserClient(object):
         raise ndb.Return(response)
 
     @ndb.tasklet
-    def deleteUser(self, email):
-        user = yield self.getUserByEmail(email)
+    def delete(self, email, strict=False):
+        user = yield self.getByEmail(email)
         if user is None:
-            raise ndb.Return(None)
+            if not strict:
+                raise ndb.Return(None)
+            else:
+                raise Error("Could not find user with email %s" % email)
 
         response = yield self._api_client.deleteRequest('admin/users/%s.json' % user['id'])
         raise ndb.Return(response)
-
-    # CONTENT ACTIONS
-
-    @ndb.tasklet
-    def createPost(self, text, title, category_name, **kwargs):
-        """Creates a post"""
-
-        category = yield self.getCategoryByName(category_name)
-
-        payload = {
-            'raw': text,
-            'title': title,
-            'category': category['id']
-        }
-
-        for k, v in kwargs.iteritems():
-            payload[k] = v
-
-        response = yield self._api_client.postRequest('posts', payload=payload)

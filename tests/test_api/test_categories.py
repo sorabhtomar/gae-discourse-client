@@ -25,19 +25,19 @@ class DiscourseCategoryTestCase(unittest.TestCase):
         )
 
     def testDeleteCategory(self):
-        discourse_client.categories.createCategory(
+        discourse_client.categories.create(
             category_name='Broncos',
             slug='broncos'
         ).get_result()
 
-        response = discourse_client.categories.deleteCategory('Broncos').get_result()
+        response = discourse_client.categories.delete('Broncos').get_result()
 
         self.assertEqual('OK', response['success'])
 
     def testCreateCategory(self):
-        discourse_client.categories.deleteCategory('Broncos').get_result()
+        discourse_client.categories.delete('Broncos').get_result()
 
-        response = discourse_client.categories.createCategory(
+        response = discourse_client.categories.create(
             category_name='Broncos',
             slug='broncos'
         ).get_result()
@@ -45,11 +45,11 @@ class DiscourseCategoryTestCase(unittest.TestCase):
         self.assertTrue(response['category'] is not None)
 
     def testGetCategoryByName(self):
-        response = discourse_client.categories.createCategory(
+        response = discourse_client.categories.create(
             category_name='Broncos',
             slug='broncos'
         ).get_result()
 
-        response = discourse_client.categories.getCategoryByName('Broncos').get_result()
+        response = discourse_client.categories.getByName('Broncos').get_result()
 
         self.assertEqual('Broncos', response['name'])

@@ -29,7 +29,7 @@ class DiscourseUserUnitTestCase(base.TestCase):
         response.content = json.dumps({'success': True})
         self._expectUrlfetch(url='http://rants.example.com/users/', method='POST', payload='', response=response)
 
-        discourse_client.users.createUser(
+        discourse_client.users.create(
             name='Peyton Manning',
             email='peyton18@example.com',
             password='omahaomaha',

@@ -13,7 +13,7 @@ class Error(Exception):
 
 
 class CategoryClient(object):
-    """An API client for interacting with Discourse"""
+    """An API client for interacting with Discourse for category-related actions"""
 
     def __init__(self, api_client):
         self._api_client = api_client
@@ -36,23 +36,21 @@ class CategoryClient(object):
         raise ndb.Return(None)
 
     @ndb.tasklet
-    def createCategory(self, category_name, parent_category_name=None, **kwargs):
+    def create(self, category_name, parent_category_name=None, strict=False, **kwargs):
         """Create a category"""
-        category = yield self.getCategoryByName(category_name)
+        category = yield self.getByName(category_name, parent_category_name)
         if category:
-            raise ndb.Return(None)
-
-        defaults = {
-            'color': 'FFFFFF',
-            'text_color': '000000'
-        }
+            if not strict:
+                raise ndb.Return(None)
+            else:
+                raise Error("Category named %s already exists!" % category_name)
 
         payload = {
             'name': category_name,
-            'allow_badges': True
+            'allow_badges': True,
+            'color': 'FFFFFF',
+            'text_color': '000000'
         }
-
-        payload.update(defaults)
 
         for k, v in kwargs.iteritems():
             payload[k] = v
@@ -67,10 +65,13 @@ class CategoryClient(object):
         raise ndb.Return(response)
 
     @ndb.tasklet
-    def deleteCategory(self, category_name):
-        category = yield self.getCategoryByName(category_name)
+    def delete(self, category_name, parent_category_name=None, strict=False):
+        category = yield self.getByName(category_name, parent_category_name)
         if not category:
-            raise ndb.Return(None)
+            if not strict:
+                raise ndb.Return(None)
+            else:
+                raise Error("Could not find category named %s" % category_name)
 
         response = yield self._api_client.deleteRequest('categories/%s' % category['slug'])
         raise ndb.Return(response)
