@@ -19,8 +19,15 @@ class CategoryClient(object):
         self._api_client = api_client
 
     @ndb.tasklet
-    def getCategoryByName(self, category_name):
-        categories = yield self._api_client.getRequest('categories.json')
+    def getByName(self, category_name, parent_category_name=None):
+        if parent_category_name:
+            parent_category = yield self.getByName(parent_category_name)
+            if not parent_category:
+                raise ndb.Return(None)
+
+            categories = yield self._api_client.getRequest('categories.json', params={'parent_category_id': parent_category['id']})
+        else:
+            categories = yield self._api_client.getRequest('categories.json')
 
         for category in categories['category_list']['categories']:
             if category['name'] == category_name:
