@@ -21,8 +21,8 @@ setup(
     license="MIT",
     keywords="google appengine discourse api client",
     url="https://github.com/udacity/gae-discourse-client",
-    packages=['src', 'tests'],
-    long_description=read('README'),
+    packages=['gae_discourse_client', 'tests'],
+    long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
