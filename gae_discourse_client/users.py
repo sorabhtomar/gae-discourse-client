@@ -53,7 +53,9 @@ class UserClient(object):
           password: Password of the user.
           username: Discourse username of the user. Must also be distinct from any other
             registered users.
-          external_id: External ID for SSO, if it exists.
+          external_id: External ID for single sign-on, if it exists. This must be unique to your
+            application (for more information on single sign-on, see
+            https://meta.discourse.org/t/official-single-sign-on-for-discourse/13045).
 
         Returns:
           A dictionary with the key 'success' set to True or False, depending on the outcome.
